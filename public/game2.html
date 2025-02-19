@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Catch the Fruit</title>
+  <style>
+    body {
+      background-color: skyblue;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      overflow: hidden;
+    }
+    #gameCanvas {
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px yellow;
+    }
+    .back-button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+    .reset-button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-button">Back to Arcade</a>
+  <button class="reset-button" onclick="resetGame()">Reset</button>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const basket = {
+      x: canvas.width / 2 - 30,
+      y: canvas.height - 60,
+      width: 60,
+      height: 40,
+      color: 'brown',
+      speed: 7
+    };
+
+    const fruits = [];
+
+    let score = 0;
+
+    function drawBasket() {
+      ctx.fillStyle = basket.color;
+      ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+    }
+
+    function drawFruit(fruit) {
+      ctx.fillStyle = fruit.color;
+      ctx.beginPath();
+      ctx.arc(fruit.x, fruit.y, fruit.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function addFruit() {
+      const colors = ['red', 'yellow', 'orange', 'green'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const fruit = {
+        x: Math.random() * canvas.width,
+        y: 0,
+        radius: 15,
+        color: randomColor,
+        speed: Math.random() * 3 + 2
+      };
+      fruits.push(fruit);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBasket();
+
+      // Move and draw fruits
+      for (let i = 0; i < fruits.length; i++) {
+        const fruit = fruits[i];
+        fruit.y += fruit.speed;
+        drawFruit(fruit);
+
+        // Check for collision
+        if (fruit.x > basket.x && fruit.x < basket.x + basket.width &&
+            fruit.y > basket.y && fruit.y < basket.y + basket.height) {
+          fruits.splice(i, 1);
+          score++;
+        } else if (fruit.y > canvas.height) {
+          fruits.splice(i, 1);
+        }
+      }
+
+      // Draw score
+      ctx.fillStyle = 'black';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Score: ' + score, 50, 30);
+
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft' && basket.x > 0) {
+        basket.x -= basket.speed;
+      } else if (event.key === 'ArrowRight' && basket.x < canvas.width - basket.width) {
+        basket.x += basket.speed;
+      }
+    });
+
+    function resetGame() {
+      score = 0;
+      fruits.length = 0;
+      basket.x = canvas.width / 2 - 30;
+    }
+
+    setInterval(addFruit, 1500);
+    update();
+  </script>
+</body>
+</html>

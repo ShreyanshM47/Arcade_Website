@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pong</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      overflow: hidden;
+    }
+    canvas {
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #0f0;
+    }
+    .back-button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+    .reset-button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-button">Back to Arcade</a>
+  <button class="reset-button" onclick="resetGame()">Reset</button>
+  <canvas id="pongCanvas" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById('pongCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let paddleHeight = 100;
+    let paddleWidth = 10;
+    let ballRadius = 10;
+    let player1Score = 0;
+    let player2Score = 0;
+
+    let player1 = {
+      x: 10,
+      y: canvas.height / 2 - paddleHeight / 2,
+      dy: 5
+    };
+
+    let player2 = {
+      x: canvas.width - 20,
+      y: canvas.height / 2 - paddleHeight / 2,
+      dy: 5
+    };
+
+    let ball = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      dx: 5,
+      dy: 5
+    };
+
+    function drawPaddle(player) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function update() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw paddles and ball
+      drawPaddle(player1);
+      drawPaddle(player2);
+      drawBall();
+
+      // Ball movement
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Paddle movement (Player 1 - Manual)
+      if (keys['w']) {
+        player1.y -= player1.dy;
+      }
+      if (keys['s']) {
+        player1.y += player1.dy;
+      }
+
+      // Paddle movement (Player 2 - AI)
+      if (ball.y < player2.y + paddleHeight / 2) {
+        player2.y -= 3;
+      } else if (ball.y > player2.y + paddleHeight / 2) {
+        player2.y += 3;
+      }
+
+      // Ball collision with top and bottom walls
+      if (ball.y + ballRadius > canvas.height || ball.y - ballRadius < 0) {
+        ball.dy = -ball.dy;
+      }
+
+      // Ball collision with paddles
+      if (ball.x - ballRadius < player1.x + paddleWidth &&
+          ball.y > player1.y && ball.y < player1.y + paddleHeight) {
+        ball.dx = -ball.dx;
+      }
+
+      if (ball.x + ballRadius > player2.x &&
+          ball.y > player2.y && ball.y < player2.y + paddleHeight) {
+        ball.dx = -ball.dx;
+      }
+
+      // Ball out of bounds
+      if (ball.x < 0) {
+        player2Score++;
+        resetBall();
+      } else if (ball.x > canvas.width) {
+        player1Score++;
+        resetBall();
+      }
+
+      // Keep paddles within the canvas
+      player1.y = Math.max(0, Math.min(player1.y, canvas.height - paddleHeight));
+      player2.y = Math.max(0, Math.min(player2.y, canvas.height - paddleHeight));
+
+      // Draw scores
+      ctx.font = "20px sans-serif";
+      ctx.fillText("Player 1: " + player1Score, 50, 30);
+      ctx.fillText("Player 2: " + player2Score, canvas.width - 150, 30);
+
+      requestAnimationFrame(update);
+    }
+
+    function resetBall() {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2;
+      ball.dx = -ball.dx;
+    }
+
+    function resetGame() {
+      player1Score = 0;
+      player2Score = 0;
+      resetBall();
+    }
+
+    // Keyboard input
+    let keys = {};
+    document.addEventListener('keydown', function(e) {
+      keys[e.key] = true;
+    });
+    document.addEventListener('keyup', function(e) {
+      keys[e.key] = false;
+    });
+
+    // Start the game
+    update();
+  </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Space Invaders</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      overflow: hidden;
+    }
+    #gameCanvas {
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px blue;
+    }
+    .back-button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+    .reset-button {
+      padding: 10px 20px;
+      background-color: #444;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-button">Back to Arcade</a>
+  <button class="reset-button" onclick="resetGame()">Reset</button>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const player = {
+      x: canvas.width / 2 - 20,
+      y: canvas.height - 50,
+      width: 40,
+      height: 30,
+      color: 'white',
+      speed: 5,
+      bullets: []
+    };
+
+    const invaders = [];
+    const invaderRowCount = 3;
+    const invaderColumnCount = 6;
+
+    let score = 0;
+
+    function createInvaders() {
+      for (let row = 0; row < invaderRowCount; row++) {
+        for (let col = 0; col < invaderColumnCount; col++) {
+          invaders.push({
+            x: 50 + col * 80,
+            y: 50 + row * 50,
+            width: 30,
+            height: 20,
+            color: 'red',
+            alive: true
+          });
+        }
+      }
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawInvader(invader) {
+      ctx.fillStyle = invader.color;
+      ctx.fillRect(invader.x, invader.y, invader.width, invader.height);
+    }
+
+    function drawBullet(bullet) {
+      ctx.fillStyle = bullet.color;
+      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawPlayer();
+
+      // Move and draw invaders
+      invaders.forEach(invader => {
+        if (invader.alive) {
+          drawInvader(invader);
+        }
+      });
+
+      // Move and draw bullets
+      player.bullets.forEach(bullet => {
+        bullet.y -= bullet.speed;
+        drawBullet(bullet);
+      });
+
+      // Collision detection
+      player.bullets.forEach((bullet, bulletIndex) => {
+        invaders.forEach((invader, invaderIndex) => {
+          if (invader.alive &&
+              bullet.x < invader.x + invader.width &&
+              bullet.x + bullet.width > invader.x &&
+              bullet.y < invader.y + invader.height &&
+              bullet.y + bullet.height > invader.y) {
+            invader.alive = false;
+            player.bullets.splice(bulletIndex, 1);
+            score += 10;
+          }
+        });
+      });
+
+      // Remove off-screen bullets
+      player.bullets = player.bullets.filter(bullet => bullet.y > 0);
+
+      // Draw score
+      ctx.fillStyle = 'white';
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Score: ' + score, 50, 30);
+
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft' && player.x > 0) {
+        player.x -= player.speed;
+      } else if (event.key === 'ArrowRight' && player.x < canvas.width - player.width) {
+        player.x += player.speed;
+      } else if (event.key === ' ') {
+        player.bullets.push({
+          x: player.x + player.width / 2 - 2.5,
+          y: player.y,
+          width: 5,
+          height: 10,
+          color: 'white',
+          speed: 10
+        });
+      }
+    });
+
+    function resetGame() {
+      score = 0;
+      player.x = canvas.width / 2 - 20;
+      player.bullets = [];
+
+      invaders.length = 0;
+      createInvaders();
+    }
+
+    createInvaders();
+    update();
+  </script>
+</body>
+</html>
